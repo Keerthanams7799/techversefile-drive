@@ -28,8 +28,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DeleteIcon, MoreVertical, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useToast } from "@/components/ui/use-toast";
 
-function FileCardActions() {
+function FileCardActions({ file }: { file: Doc<"files"> }) {
+  const deleteFile = useMutation(api.files.deleteFile);
+  const { toast } = useToast();
+
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   return (
     <>
@@ -45,8 +51,13 @@ function FileCardActions() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                // TODO: actually  delete the file here
+              onClick={async() => {
+                await deleteFile({ fileId: file._id });
+                toast({
+                    variant: "default",
+                    title: "File Deleted",
+                    description: "Your file is now gorom the system",
+                  });
               }}
             >
               Continue
@@ -81,7 +92,7 @@ export function FileCard({ file }: { file: Doc<"files"> }) {
           {file.name}
         </CardTitle>
         <div className="absolute top-2 right-2">
-          <FileCardActions />
+          <FileCardActions file={file} />
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>

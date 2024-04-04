@@ -12,7 +12,6 @@ export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
 });
 
-
 async function hasAccessToOrg(
   ctx: QueryCtx | MutationCtx,
   tokenIdentifier: string,
@@ -30,7 +29,6 @@ export const createFile = mutation({
     name: v.string(),
     fileId: v.id("_storage"),
     orgId: v.string(),
-
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
@@ -78,10 +76,38 @@ export const getFiles = query({
       return [];
     }
 
-
     return ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
+  },
+});
+
+export const deleteFile = mutation({
+  args: { fileId: v.id("files") },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new ConvexError("you do not have access to this organisation");
+    }
+
+    const file = await ctx.db.get(args.fileId);
+
+    if (!file) {
+      throw new ConvexError("this file does not exist");
+    }
+
+    const hasAccess = await hasAccessToOrg(
+      ctx,
+      identity.tokenIdentifier,
+      file.orgId
+    );
+
+    if (!hasAccess) {
+      throw new ConvexError("you do not have access to delete this file");
+    }
+
+    await ctx.db.delete(args.fileId);
   },
 });
