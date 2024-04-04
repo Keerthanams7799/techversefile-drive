@@ -26,8 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DeleteIcon, MoreVertical, Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { DeleteIcon, DownloadIcon, FileArchiveIcon, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, Trash2Icon } from "lucide-react";
+import { ReactNode, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -56,7 +56,7 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
                 toast({
                     variant: "default",
                     title: "File Deleted",
-                    description: "Your file is now gorom the system",
+                    description: "Your file is now gone from the system",
                   });
               }}
             >
@@ -84,6 +84,13 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
 }
 
 export function FileCard({ file }: { file: Doc<"files"> }) {
+
+  const typeIcons = {
+    image: <ImageIcon />,
+    pdf: <FileTextIcon />,
+    csv: <GanttChartIcon />,
+  } as Record<Doc<"files">["type"], ReactNode>;
+
   return (
     <Card>
       <CardHeader className="relative">
@@ -97,7 +104,7 @@ export function FileCard({ file }: { file: Doc<"files"> }) {
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
       <CardContent>
-        <p>Card Content</p>
+        <p>{typeIcons[file.type]}</p>
       </CardContent>
       <CardFooter>
         <Button>Download</Button>

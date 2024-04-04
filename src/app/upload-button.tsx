@@ -1,10 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  useOrganization,
-  useUser,
-} from "@clerk/nextjs";
+import { useOrganization, useUser } from "@clerk/nextjs";
 import {
   Form,
   FormControl,
@@ -31,6 +28,7 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { Doc } from "../../convex/_generated/dataModel";
 
 const formSchema = z.object({
   title: z.string().min(1).max(200),
@@ -60,6 +58,7 @@ export function UploadButton() {
     console.log(values.file);
     if (!orgId) return;
     const postUrl = await generateUploadUrl();
+    const fileType = values.file[0].type;
 
     const result = await fetch(postUrl, {
       method: "POST",
@@ -68,11 +67,28 @@ export function UploadButton() {
     });
     const { storageId } = await result.json();
 
+    const types = {
+      "image/jpeg": "image",
+      "image/png": "image",
+      "image/gif": "image",
+      "application/pdf": "pdf",
+      "text/csv": "csv",
+      "application/zip": "zip",
+      "application/msword": "doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+      "application/vnd.ms-excel": "xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+      "application/vnd.ms-powerpoint": "ppt",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+      "text/plain": "text",
+    } as Record<string, Doc<"files">["type"]>;
+
     try {
       await createFile({
         name: values.title,
         fileId: storageId,
         orgId,
+        type: types[fileType],
       });
       form.reset();
 
@@ -104,68 +120,65 @@ export function UploadButton() {
 
   return (
     <Dialog
-          open={isFileDialogOpen}
-          onOpenChange={(isOpen) => {
-            setIsFileDialogOpen(isOpen);
-            form.reset();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button onClick={() => {}}>Upload File</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="mb-8">Upload your File here</DialogTitle>
-              <DialogDescription>
-                This file will be accessible by anyone in your orgainzation
-              </DialogDescription>
-            </DialogHeader>
-            <div>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-8"
-                >
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="file"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>File</FormLabel>
-                        <FormControl>
-                          <Input type="file" {...fileRef} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={form.formState.isSubmitting}
-                    className="flex gap-1"
-                  >
-                    {form.formState.isSubmitting && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    )}
-                    Submit
-                  </Button>
-                </form>
-              </Form>
-            </div>
-          </DialogContent>
-        </Dialog>
+      open={isFileDialogOpen}
+      onOpenChange={(isOpen) => {
+        setIsFileDialogOpen(isOpen);
+        form.reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button onClick={() => {}}>Upload File</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="mb-8">Upload your File here</DialogTitle>
+          <DialogDescription>
+            This file will be accessible by anyone in your orgainzation
+          </DialogDescription>
+        </DialogHeader>
+        <div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="file"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>File</FormLabel>
+                    <FormControl>
+                      <Input type="file" {...fileRef} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="flex gap-1"
+              >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                Submit
+              </Button>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
