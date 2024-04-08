@@ -61,6 +61,7 @@ export const createFile = mutation({
 export const getFiles = query({
   args: {
     orgId: v.string(),
+    query: v.optional(v.string()),
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
@@ -79,10 +80,20 @@ export const getFiles = query({
       return [];
     }
 
-    return ctx.db
+    const files = await ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
+
+    const query = args.query;
+
+    if (query) {
+      return files.filter((file) =>
+        file.name.toLowerCase().includes(query.toLowerCase())
+      );
+    } else {
+      return files;
+    }
   },
 });
 
@@ -112,5 +123,50 @@ export const deleteFile = mutation({
     }
 
     await ctx.db.delete(args.fileId);
+  },
+});
+
+export const toggleFavorite = mutation({
+  args: { fileId: v.id("files") },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new ConvexError("you do not have access to this organisation");
+    }
+
+    const file = await ctx.db.get(args.fileId);
+
+    if (!file) {
+      throw new ConvexError("this file does not exist");
+    }
+
+    const hasAccess = await hasAccessToOrg(
+      ctx,
+      identity.tokenIdentifier,
+      file.orgId
+    );
+
+    if (!hasAccess) {
+      throw new ConvexError("you do not have access to delete this file");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .first();
+
+    if (!user) {
+      throw new ConvexError("no user found");
+    }
+
+    const favorite = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId_orgId_fileId", (q) =>
+        q.eq("userId", user._id).eq("orgId", file.orgId).eq("fileId", file._id)
+      )
+      .first();
   },
 });
