@@ -33,10 +33,11 @@ import {
   MoreVertical,
   StarHalf,
   StarIcon,
-  Trash2Icon,
+  TrashIcon,
+  UndoIcon,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useToast } from "@/components/ui/use-toast";
 import Image from "next/image";
@@ -50,10 +51,15 @@ export function FileCardActions({
   isFavorited: boolean;
 }) {
   const deleteFile = useMutation(api.files.deleteFile);
+  const restoreFile = useMutation(api.files.restoreFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
+
   const { toast } = useToast();
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const userProfile = useQuery(api.users.getUserProfile,{
+    userId: file.userId,
+  });
   return (
     <>
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
@@ -62,7 +68,7 @@ export function FileCardActions({
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action will mark the file for our deletion process. Files are
-              deleted periodically.
+              deleted periodically
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -72,8 +78,8 @@ export function FileCardActions({
                 await deleteFile({ fileId: file._id });
                 toast({
                   variant: "default",
-                  title: "File Deleted",
-                  description: "Your file is now gone from the system",
+                  title: "File marked for deletion",
+                  description: "Your file will be deleted soon",
                 });
               }}
             >
@@ -108,11 +114,26 @@ export function FileCardActions({
           <Protect role="org:admin" fallback={<></>}>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => setIsConfirmOpen(true)}
-              className="flex gap-1 text-red-600 items-center cursor-pointer"
+              onClick={() => {
+                if (file.shouldDelete) {
+                  restoreFile({
+                    fileId: file._id,
+                  });
+                } else {
+                  setIsConfirmOpen(true);
+                }
+              }}
+              className="flex gap-1 items-center cursor-pointer"
             >
-              <Trash2Icon className="w-4 h-4" />
-              Delete
+              {file.shouldDelete ? (
+                <div className="flex gap-1 text-green-600 items-center cursor-pointer">
+                  <UndoIcon className="w-4 h-4" /> Restore
+                </div>
+              ) : (
+                <div className="flex gap-1 text-red-600 items-center cursor-pointer">
+                  <TrashIcon className="w-4 h-4" /> Delete
+                </div>
+              )}
             </DropdownMenuItem>
           </Protect>
         </DropdownMenuContent>
