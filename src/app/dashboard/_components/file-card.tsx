@@ -40,8 +40,15 @@ import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useToast } from "@/components/ui/use-toast";
 import Image from "next/image";
+import { Protect } from "@clerk/nextjs";
 
-export function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited: boolean}) {
+export function FileCardActions({
+  file,
+  isFavorited,
+}: {
+  file: Doc<"files">;
+  isFavorited: boolean;
+}) {
   const deleteFile = useMutation(api.files.deleteFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
   const { toast } = useToast();
@@ -98,14 +105,16 @@ export function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isF
               </div>
             )}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setIsConfirmOpen(true)}
-            className="flex gap-1 text-red-600 items-center cursor-pointer"
-          >
-            <Trash2Icon className="w-4 h-4" />
-            Delete
-          </DropdownMenuItem>
+          <Protect role="org:admin" fallback={<></>}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setIsConfirmOpen(true)}
+              className="flex gap-1 text-red-600 items-center cursor-pointer"
+            >
+              <Trash2Icon className="w-4 h-4" />
+              Delete
+            </DropdownMenuItem>
+          </Protect>
         </DropdownMenuContent>
       </DropdownMenu>
     </>
@@ -136,7 +145,9 @@ export function FileCard({
     text: <GanttChartIcon />,
   } as Record<Doc<"files">["type"], ReactNode>;
 
-  const isFavorited = favorites.some(favorite  => favorite.fileId === file._id);
+  const isFavorited = favorites.some(
+    (favorite) => favorite.fileId === file._id
+  );
 
   return (
     <Card>
