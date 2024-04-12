@@ -18,16 +18,16 @@ export const fileTypes = v.union(
 export const roles = v.union(v.literal("admin"), v.literal("member"));
 
 export default defineSchema({
-  files: defineTable({ 
+  files: defineTable({
     name: v.string(),
-    type: fileTypes, 
-    orgId: v.string(), 
-    fileId: v.id("_storage"), 
+    type: fileTypes,
+    orgId: v.string(),
+    fileId: v.id("_storage"),
     userId: v.id("users"),
     shouldDelete: v.optional(v.boolean()),
   })
-  .index("by_orgId", ["orgId"])
-  .index("by_shouldDelete", ["shouldDelete"]),
+    .index("by_orgId", ["orgId"])
+    .index("by_shouldDelete", ["shouldDelete"]),
   favorites: defineTable({
     fileId: v.id("files"),
     orgId: v.string(),
