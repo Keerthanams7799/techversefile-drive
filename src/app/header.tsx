@@ -1,7 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { OrganizationSwitcher, SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import Link from "next/link";
+import {
+  OrganizationSwitcher,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+  useSession,
+} from "@clerk/nextjs";
 import Image from "next/image";
+import Link from "next/link";
 
 export function Header() {
   return (
@@ -9,24 +16,24 @@ export function Header() {
       <div className="items-center container mx-auto justify-between flex">
         <Link href="/" className="flex gap-2 items-center text-xl text-black">
           <Image src="/logo.png" width="50" height="50" alt="file drive logo" />
-          DriVerse
+          FileDrive
         </Link>
+
         <SignedIn>
-          <Button variant={"outline"}>
-            <Link href="/dashboard/files">Your Files</Link>
+          <Button variant={"outline"} className="items-center mx-auto justify-between flex">
+            <Link href="/dashboard/files">Dashboard</Link>
           </Button>
         </SignedIn>
 
         <div className="flex gap-2">
-            <OrganizationSwitcher/>
-            <UserButton />
-            <SignedOut>
+          <OrganizationSwitcher />
+          <UserButton />
+          <SignedOut>
             <SignInButton>
               <Button>Sign In</Button>
             </SignInButton>
-            </SignedOut>
+          </SignedOut>
         </div>
-        
       </div>
     </div>
   );

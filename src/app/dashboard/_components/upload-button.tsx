@@ -54,8 +54,6 @@ export function UploadButton() {
   const fileRef = form.register("file");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    console.log(values.file);
     if (!orgId) return;
     const postUrl = await generateUploadUrl();
     const fileType = values.file[0].type;
@@ -115,7 +113,6 @@ export function UploadButton() {
 
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
 
-  const files = useQuery(api.files.getFiles, orgId ? { orgId } : "skip");
   const createFile = useMutation(api.files.createFile);
 
   return (
@@ -127,7 +124,7 @@ export function UploadButton() {
       }}
     >
       <DialogTrigger asChild>
-        <Button onClick={() => {}}>Upload File</Button>
+        <Button>Upload File</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
